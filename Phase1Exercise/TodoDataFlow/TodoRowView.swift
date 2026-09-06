@@ -18,11 +18,15 @@ struct TodoRowView: View {
 				.scaledToFit()
 				.frame(width: 20, height: 20)
 				.foregroundStyle(todo.isDone ? Color.pink : .gray)
+                .onTapGesture {
+                    todo.isDone.toggle()
+                }
 			
 			Text(todo.title)
 				.font(.title3)
 				.fontWeight(.medium)
-		} //:HSTACK\
+            Spacer()
+		} //:HSTACK
 		.frame(maxWidth: .infinity)
 		
     }
