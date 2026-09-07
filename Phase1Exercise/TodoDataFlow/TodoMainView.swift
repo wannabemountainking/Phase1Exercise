@@ -32,22 +32,31 @@ struct TodoMainView: View {
 			Divider()
 			
 			// Contents
-			ScrollView {
-				VStack(spacing: 10) {
-					ForEach($items, id: \.id) { todoItem in
-						TodoRowView(todo: todoItem)
-					}
-				} //:VSTACK
+			ScrollViewReader { proxy in
+				ScrollView {
+					LazyVStack(spacing: 10) {
+						ForEach($items, id: \.id) { todoItem in
+							TodoRowView(todo: todoItem)
+								.id(todoItem.id)
+						} //:LOOP
+					} //:VSTACK
+					.onChange(of: items.count, { numberOfOldItems, numberOfNewItems in
+						if let id = items.last?.id,
+						   numberOfOldItems < numberOfNewItems {
+							proxy.scrollTo(id, anchor: .bottom)
+						}
+					})
+				} //:SCROLL
 			}
-			
-			Spacer()
 			
 			Divider()
 			
 			// Footer
 			TodoInputView { newTodoString in
-				let item = TodoItem(title: newTodoString)
-				items.append(item)
+				if newTodoString.trimmingCharacters(in: .whitespacesAndNewlines) != "" {
+					let item = TodoItem(title: newTodoString)
+					items.append(item)
+				}
 			}
 			
 			Divider()

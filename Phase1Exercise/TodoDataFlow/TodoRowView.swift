@@ -18,9 +18,6 @@ struct TodoRowView: View {
 				.scaledToFit()
 				.frame(width: 20, height: 20)
 				.foregroundStyle(todo.isDone ? Color.pink : .gray)
-                .onTapGesture {
-                    todo.isDone.toggle()
-                }
 			
 			Text(todo.title)
 				.font(.title3)
@@ -28,7 +25,12 @@ struct TodoRowView: View {
             Spacer()
 		} //:HSTACK
 		.frame(maxWidth: .infinity)
-		
+		.contentShape(Rectangle())
+		.onTapGesture {
+			withAnimation(.spring(response: 0.5, dampingFraction: 0.8)) {
+				todo.isDone.toggle()
+			}
+		}
     }
 }
 
