@@ -27,14 +27,10 @@ struct Voice: Identifiable {
 			)
 	}
 	
-	init(title: String? = nil) {
-		if let title {
-			self.title = title
-		} else {
-			let formatter = DateFormatter()
-			formatter.dateFormat = "yyyy년 MM월 dd일 dd시"
-			self.title = formatter.string(from: Date())
-		}
+	init() {
+		let formatter = DateFormatter()
+		formatter.dateFormat = "yyyy년 MM월 dd일 dd시"
+		self.title = formatter.string(from: Date())
 	}
 }
 
@@ -48,46 +44,91 @@ final class RecordingManager: NSObject {
 	
 	var recorder: AVAudioRecorder? = nil
 	var timer: Timer? = nil
+	var currentTime: TimeInterval = 0
 	var isRecording: Bool = false
 	var lastErrorMessage: String = ""
 	var recordEventHandler = RecordEventHandler()
 	
 	private override init() {
 		super.init()
-		requestRecordAuthorization()
+		
+		self.recordEventHandler.onFinish = { [weak self] in
+			guard let self else {return}
+			
+			// isRecording 상태 false
+			self.isRecording = false
+			// Duration 저장
+			self.currentVoice?.duration = self.currentTime
+			// 배열에 저장
+			if let voice = self.currentVoice {
+				self.voices.append(voice)
+			}
+			self.currentVoice = nil
+		}
 	}
 	
-	func requestRecordAuthorization(title: String? = nil) {
-		AVAudioApplication.requestRecordPermission { [weak self] granted in
-			if !granted {
+	private func requestRecordAuthorization() async -> Bool {
+		await withCheckedContinuation { continuation in
+			AVAudioApplication.requestRecordPermission { [weak self] granted in
 				guard let self else { return }
-				self.lastErrorMessage = "마이크 권한 거부"
-				print(self.lastErrorMessage)
-				return
-			} else {
-				print("마이크 권한 허용")
+				if !granted {
+					self.lastErrorMessage = "마이크 권한 거부"
+					print(self.lastErrorMessage)
+				} else {
+					print("마이크 권한 허용")
+				}
+				continuation.resume(returning: granted)
 			}
 		}
+		
 	}
 	
-	func record() {
-		guard let url = currentVoice?.fileURL else {return}
-		
-		let settings: [String : Any] = [
-			AVFormatIDKey: Int(kAudioFormatMPEG4AAC),
-			AVSampleRateKey: 12000,
-			AVNumberOfChannelsKey: 1,
-			AVEncoderAudioQualityKey: AVAudioQuality.high.rawValue
-		]
-		
-		do {
-			recorder = try AVAudioRecorder(url: url, settings: settings)
-			self.isRecording = true
-			recorder?.delegate = recordEventHandler
-			recorder?.record()
-		} catch {
-			self.lastErrorMessage = "녹음 객체 생성 실패"
+	func record() async {
+		// 권한 확인
+		let isAuthorized = await requestRecordAuthorization()
+		if isAuthorized {
+			// Voice 인스턴스 생성
+			self.currentVoice = Voice()
+			
+			// url 생성
+			guard let url = self.currentVoice?.fileURL else {
+				self.lastErrorMessage = "URL 에러"
+				print(self.lastErrorMessage)
+				return
+			}
+			
+			// recorder 객체 생성
+			let settings: [String : Any] = [
+				AVFormatIDKey: Int(kAudioFormatMPEG4AAC),
+				AVSampleRateKey: 12000,
+				AVNumberOfChannelsKey: 1,
+				AVEncoderAudioQualityKey: AVAudioQuality.high.rawValue
+			]
+			
+			do {
+				self.recorder = try AVAudioRecorder(url: url, settings: settings)
+				self.recorder?.delegate = self.recordEventHandler
+				
+				self.recorder?.record()
+				self.isRecording = true
+				
+			} catch {
+				self.lastErrorMessage = "녹음 객체 생성 실패"
+			}
+			
+			self.timer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true, block: { [weak self] _ in
+				guard let self else { return }
+				self.currentTime = self.recorder?.currentTime ?? 0
+			})
 		}
+	}
+	
+	func stop() {
+		// recorder 정지
+		self.recorder?.stop()
+		// 타이머 정지
+		self.timer?.invalidate()
+		self.timer = nil
 	}
 }
 
