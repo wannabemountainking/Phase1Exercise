@@ -29,7 +29,7 @@ struct Voice: Identifiable {
 	
 	init() {
 		let formatter = DateFormatter()
-		formatter.dateFormat = "yyyy년 MM월 dd일 dd시"
+		formatter.dateFormat = "yyyy년_MM월_dd일_dd시"
 		self.title = formatter.string(from: Date())
 	}
 }
@@ -45,6 +45,7 @@ final class RecordingManager: NSObject {
 	var recorder: AVAudioRecorder? = nil
 	var timer: Timer? = nil
 	var currentTime: TimeInterval = 0
+	var currentRecordingTime: String = "00:00"
 	var isRecording: Bool = false
 	var lastErrorMessage: String = ""
 	var recordEventHandler = RecordEventHandler()
@@ -52,6 +53,15 @@ final class RecordingManager: NSObject {
 	private override init() {
 		super.init()
 		
+		// AVAudioSession에 녹음할 것이라는 선언
+		let recordSession = AVAudioSession.sharedInstance()
+		do {
+			try recordSession.setCategory(.record)
+			try recordSession.setActive(true)
+		} catch {
+			self.lastErrorMessage = error.localizedDescription
+		}
+		// 녹음 끝나면 실행 코드 설정
 		self.recordEventHandler.onFinish = { [weak self] in
 			guard let self else {return}
 			
@@ -64,6 +74,7 @@ final class RecordingManager: NSObject {
 				self.voices.append(voice)
 			}
 			self.currentVoice = nil
+			self.currentTime = 0
 		}
 	}
 	
@@ -113,12 +124,13 @@ final class RecordingManager: NSObject {
 				self.isRecording = true
 				
 			} catch {
-				self.lastErrorMessage = "녹음 객체 생성 실패"
+				self.lastErrorMessage = "AVAudioSession 생성 실패"
 			}
 			
-			self.timer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true, block: { [weak self] _ in
+			self.timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true, block: { [weak self] _ in
 				guard let self else { return }
 				self.currentTime = self.recorder?.currentTime ?? 0
+				self.currentRecordingTime = self.currentTime.recordedTime
 			})
 		}
 	}
@@ -129,6 +141,14 @@ final class RecordingManager: NSObject {
 		// 타이머 정지
 		self.timer?.invalidate()
 		self.timer = nil
+	}
+	
+	func toggleRecordingState() async {
+		if self.isRecording {
+			self.stop()
+		} else {
+			await self.record()
+		}
 	}
 }
 
