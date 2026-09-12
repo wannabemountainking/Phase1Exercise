@@ -22,15 +22,12 @@ struct Voice: Identifiable {
 				directoryHint: .notDirectory
 			)
 	}
-	var imageName: String {"\(id.uuidString).png"}
-	var imageURL: URL? {
+	var imageData: Data?
+	var imageDataURL: URL? {
 		FileManager.default
-			.urls(for: .picturesDirectory, in: .userDomainMask)
+			.urls(for: .applicationSupportDirectory, in: .userDomainMask)
 			.first?
-			.appending(
-				path: imageName,
-				directoryHint: .notDirectory
-			)
+			.appending(path: "\(id)", directoryHint: .notDirectory)
 	}
 	
 	init() {
