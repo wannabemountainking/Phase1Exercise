@@ -10,30 +10,6 @@ import Observation
 import AVFAudio
 
 
-struct Voice: Identifiable {
-	let id = UUID()
-	var title: String?
-	var duration: TimeInterval? = nil
-	let dateRecorded: Date = Date()
-	
-	var filename: String { "\(id.uuidString).m4a" }
-	var fileURL: URL? {
-		FileManager.default
-			.urls(for: .documentDirectory, in: .userDomainMask)
-			.first?
-			.appending(
-				path: filename,
-				directoryHint: .notDirectory
-			)
-	}
-	
-	init() {
-		let formatter = DateFormatter()
-		formatter.dateFormat = "yyyy년_MM월_dd일_dd시"
-		self.title = formatter.string(from: Date())
-	}
-}
-
 @Observable
 final class RecordingManager: NSObject {
 	
