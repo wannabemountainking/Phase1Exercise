@@ -127,8 +127,9 @@ final class RecordingManager: NSObject {
 		}
 	}
 	
-	func getSelectedImageURL(for voiceID: UUID) -> URL? {
-		guard let index = voices.firstIndex(where: { $0.id == voiceID }),
+	func getSelectedImageURL(for voiceID: UUID? = nil) -> URL? {
+		guard let id = voiceID,
+			  let index = voices.firstIndex(where: { $0.id == id }),
 			  let filePathUrl = voices[index].imageDataURL else {
 			self.lastErrorMessage = "곡의 저장 장소를 찾을 수 없습니다."
 			return nil
@@ -136,8 +137,9 @@ final class RecordingManager: NSObject {
 		return filePathUrl
 	}
 	
-	func hasPhotoImage(for voiceID: UUID) -> Bool? {
-		guard let filePathURL = getSelectedImageURL(for: voiceID) else {
+	func hasPhotoImage(for voiceID: UUID? = nil) -> Bool? {
+		guard let id = voiceID,
+			  let filePathURL = getSelectedImageURL(for: voiceID) else {
 			self.lastErrorMessage = "FileURL 에러"
 			return nil
 		}

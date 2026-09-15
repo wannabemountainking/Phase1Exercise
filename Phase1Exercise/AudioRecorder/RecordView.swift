@@ -41,17 +41,20 @@ struct RecordView: View {
 				VStack(alignment: .leading, spacing: 10) {
 					ForEach(manager.voices) { voice in
 						HStack(spacing: 10) {
-							Image(systemName: "play.circle")
+							PhotoView()
 							
 							Text(voice.title ?? "No Title")
 							
 							Text((voice.duration ?? 0).recordedTime)
+							Spacer()
 						} //:HSTACK
 						.font(.title3)
 						.fontWeight(.semibold)
 						.onTapGesture {
+							manager.currentVoice = voice
 							print("재생")
 						}
+						.padding(.horizontal, 20)
 					} //:LOOP
 				} //:VSTACK
 			} //:SCROLL
