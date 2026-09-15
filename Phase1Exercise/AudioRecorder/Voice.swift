@@ -22,7 +22,6 @@ struct Voice: Identifiable {
 				directoryHint: .notDirectory
 			)
 	}
-	var imageData: Data?
 	var imageDataURL: URL? {
 		FileManager.default
 			.urls(for: .applicationSupportDirectory, in: .userDomainMask)

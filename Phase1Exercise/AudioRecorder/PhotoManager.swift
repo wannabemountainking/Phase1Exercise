@@ -13,30 +13,21 @@ import PhotosUI
 final class PhotoManager {
 	
 	static let shared = PhotoManager()
-	var recordManager = RecordingManager.shared
 	
 	var photosItems: [PhotosPickerItem] = []
 	
 	private init() {}
 	
-	func savePhoto(_ item: PhotosPickerItem, for id: UUID) async throws {
-		guard let imageData = try await item.loadTransferable(type: Data.self) else {
+	func fetchImageData(_ item: PhotosPickerItem) async throws -> Data {
+		// loadTransferable로 Data 뽑기
+		guard let data = try await item.loadTransferable(type: Data.self) else {
 			throw PhotoError.noData
 		}
-		
-		guard let index = recordManager.voices.firstIndex(where: { $0.id == id }) else { print("매칭 id 없음")
-			return
-		}
-		recordManager.voices[index].imageData = imageData
-		guard let url = recordManager.voices[index].imageDataURL else {
-			throw PhotoError.wrongURL
-		}
-		try imageData.write(to: url, options: .atomic)
+		return data
 	}
 	
 	enum PhotoError: Error {
 		case noData
-		case wrongURL
 	}
 }
 

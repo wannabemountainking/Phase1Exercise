@@ -126,6 +126,33 @@ final class RecordingManager: NSObject {
 			await self.record()
 		}
 	}
+	
+	func getSelectedImageURL(for voiceID: UUID) -> URL? {
+		guard let index = voices.firstIndex(where: { $0.id == voiceID }),
+			  let filePathUrl = voices[index].imageDataURL else {
+			self.lastErrorMessage = "곡의 저장 장소를 찾을 수 없습니다."
+			return nil
+		}
+		return filePathUrl
+	}
+	
+	func hasPhotoImage(for voiceID: UUID) -> Bool? {
+		guard let filePathURL = getSelectedImageURL(for: voiceID) else {
+			self.lastErrorMessage = "FileURL 에러"
+			return nil
+		}
+		let fileURL = filePathURL.path(percentEncoded: false)
+		return FileManager.default.fileExists(atPath: fileURL)
+	}
+	
+	func writeImage(photoData: Data, url: URL) {
+		do {
+			try photoData.write(to: url)
+		} catch {
+			self.lastErrorMessage = error.localizedDescription
+		}
+		return
+	}
 }
 
 final class RecordEventHandler: NSObject, AVAudioRecorderDelegate {

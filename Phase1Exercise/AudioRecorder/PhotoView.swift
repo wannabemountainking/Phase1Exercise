@@ -10,7 +10,7 @@ import SwiftUI
 struct PhotoView: View {
 	
 	@State private var photoManager: PhotoManager = .shared
-	@Binding var currentVoice: Voice
+	@State private var recordManager: RecordingManager = .shared
 	
 	
     var body: some View {
