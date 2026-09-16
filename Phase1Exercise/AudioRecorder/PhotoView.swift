@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import PhotosUI
 
 struct PhotoView: View {
 	
@@ -21,7 +22,13 @@ struct PhotoView: View {
 			   hasPhotoImage {
 				
 			} else {
-				
+				PhotosPicker(
+					selection: $photoManager.photosItems,
+					matching: .images,
+					label: {
+						Image(systemName: "photo")
+					}
+				)
 			}
 			
 		} //:VSTACK
