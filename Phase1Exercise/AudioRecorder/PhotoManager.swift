@@ -15,6 +15,7 @@ final class PhotoManager {
 	static let shared = PhotoManager()
 	
 	var currentPhotosItem: PhotosPickerItem? = nil
+	var selectedImage: Image? = nil
 	
 	private init() {}
 	
@@ -25,6 +26,11 @@ final class PhotoManager {
 			throw PhotoError.noData
 		}
 		return data
+	}
+	
+	func DataToImage(data: Data) -> Image? {
+		guard let uiImage = UIImage(data: data) else { return nil}
+		return Image(uiImage: uiImage)
 	}
 	
 	enum PhotoError: Error {

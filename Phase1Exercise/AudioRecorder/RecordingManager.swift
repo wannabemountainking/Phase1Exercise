@@ -153,7 +153,6 @@ final class RecordingManager: NSObject {
 		} catch {
 			self.lastErrorMessage = error.localizedDescription
 		}
-		return
 	}
 }
 

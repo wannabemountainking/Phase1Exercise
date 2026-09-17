@@ -10,47 +10,54 @@ import PhotosUI
 
 struct PhotoView: View {
 	
-	@State private var photoManager: PhotoManager = .shared
-	@State private var recordManager: RecordingManager = .shared
-	var selectedImage: Image? {
-		Task {
-			let data = try? await photoManager.fetchImageData(photoManager.currentPhotosItem)
-		}
-		guard let imageData = data,
-			  let uiImage = UIImage(data: imageData),
-			  let selectedImage = Image(uiImage: uiImage) else {return nil}
-		return selectedImage
-	
-	}
+	@State private var pm: PhotoManager = .shared
+	@State private var rm: RecordingManager = .shared
 	
     var body: some View {
         
 		VStack(spacing: 5) {
 			
-			if let currVoice = recordManager.currentVoice,
-			   let hasPhotoImage = recordManager.hasPhotoImage(for: currVoice.id),
+			if let currVoice = rm.currentVoice,
+			   let hasPhotoImage = rm.hasPhotoImage(for: currVoice.id),
 			   hasPhotoImage {
 				
 			} else {
 				
-				if let currentImageUrl =
-				   let image = UIImage(data: photoManager.fetchImageData(photoManager.currentPhotosItem)) {
-					
-				} else {
-					Image(systemName: "photo")
-						.resizable()
-						.frame(width: 35, height: 35)
-						.foregroundStyle(.gray)
-				}
+				
 				PhotosPicker(
-					selection: $photoManager.currentPhotosItem,
+					selection: $pm.currentPhotosItem,
 					matching: .images,
-					label: { }
+					label: {
+						if
+					}
 				)
+				.onChange(of: pm.selectedImage) { oldValue, newValue in
+					if newValue == nil {
+						
+					}
+				}
 			}
 			
 		} //:VSTACK
     }
+	
+	private func putItemToPreviewImage(_ item: PhotosPickerItem?, url: URL) async -> Image? {
+		do {
+			let imageData = try await pm.fetchImageData(item)
+			guard let image = pm.DataToImage(data: imageData) else {
+				rm.lastErrorMessage = "데이터 변환 실패"
+				return nil
+			}
+			rm.writeImage(photoData: imageData, url: url)
+			return image
+				.resizable()
+				.scaledToFit()
+				.frame(width: 35, height: 35)
+		} catch error {
+			rm.lastErrorMessage = error.localizedDescription
+			return nil
+		}
+	}
 }
 
 #Preview {
