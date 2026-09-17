@@ -39,22 +39,16 @@ struct RecordView: View {
 			// 녹음 목록
 			ScrollView {
 				VStack(alignment: .leading, spacing: 10) {
-					ForEach(manager.voices) { voice in
-						HStack(spacing: 10) {
-							PhotoView()
-							
-							Text(voice.title ?? "No Title")
-							
-							Text((voice.duration ?? 0).recordedTime)
-							Spacer()
-						} //:HSTACK
-						.font(.title3)
-						.fontWeight(.semibold)
-						.onTapGesture {
-							manager.currentVoice = voice
-							print("재생")
-						}
-						.padding(.horizontal, 20)
+					ForEach(manager.voices) {
+						voice in
+							RecordRowView(
+								voice: voice,
+								manager: manager
+							)
+							.onTapGesture {
+								manager.currentVoice = voice
+								print("재생")
+							}
 					} //:LOOP
 				} //:VSTACK
 			} //:SCROLL

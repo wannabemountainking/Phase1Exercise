@@ -13,26 +13,34 @@ struct PhotoView: View {
 	@State private var pm: PhotoManager = .shared
 	@State private var rm: RecordingManager = .shared
 	
+	let currentVoiceID: UUID
+	
     var body: some View {
         
 		VStack(spacing: 5) {
-			
-			if let currVoice = rm.currentVoice,
-			   let hasPhotoImage = rm.hasPhotoImage(for: currVoice.id),
+			if let hasPhotoImage = rm.hasPhotoImage(for: currVoiceID),
 			   hasPhotoImage {
 				
 			} else {
-				
-				
 				PhotosPicker(
 					selection: $pm.currentPhotosItem,
 					matching: .images,
 					label: {
-						if
+						if let
 					}
 				)
-				.onChange(of: pm.selectedImage) { oldValue, newValue in
-					if newValue == nil {
+				.onChange(of: pm.currentPhotosItem) {
+					oldValue,
+					newValue in
+					if let url = rm.currentVoice?.imageDataURL,
+					   newValue == nil || shouldChangeImage {
+						Task {
+							pm.selectedImage = putItemToPreviewImage(
+								pm.currentPhotosItem,
+								url: url
+							)
+						}
+					} else {
 						
 					}
 				}
@@ -53,7 +61,7 @@ struct PhotoView: View {
 				.resizable()
 				.scaledToFit()
 				.frame(width: 35, height: 35)
-		} catch error {
+		} catch {
 			rm.lastErrorMessage = error.localizedDescription
 			return nil
 		}
