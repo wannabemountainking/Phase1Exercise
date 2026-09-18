@@ -23,43 +23,37 @@ struct PhotoView: View {
 				selection: $pm.currentPhotosItem,
 				matching: .images,
 				label: {
-					switch rm.hasPhotoImage(for: currentVoiceID) {
-					case .none:
-						Image(systemName: "photo")
-							.resizable()
-							.scaledToFit()
-							.frame(width: 35, height: 35)
-					case .some(true):
-						if let image = pm.selectedImage {
-							image
-								.resizable()
-								.scaledToFit()
-								.frame(width: 35, height: 35)
-								.alert(
-									"이미지 교체",
-									isPresented: $shouldChangeImage,
-									actions: {
-										Button("교체") {
-											// Action
-											Task {
-												await writeImageAction(item: pm.currentPhotosItem)
-											}
-										}
-										Button("취소") {
-											// Action
-										}
-									},
-									message: {
-										Text("이미지를 교체하시겠습니까?")
-									}
-								)
-						}
-					case .some(false):
-						Image(systemName: "photo")
-							.resizable()
-							.scaledToFit()
-							.frame(width: 35, height: 35)
-					}
+                    if let image = pm.selectedImage {
+                        image
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 35, height: 35)
+                            .alert(
+                                "이미지 교체",
+                                isPresented: $shouldChangeImage,
+                                actions: {
+                                    Button("교체") {
+                                        // Action
+                                        Task {
+                                            await writeImageAction(item: pm.currentPhotosItem)
+                                        }
+                                        shouldChangeImage = true
+                                    }
+                                    Button("취소") {
+                                        // Action
+                                        shouldChangeImage = false
+                                    }
+                                },
+                                message: {
+                                    Text("이미지를 교체하시겠습니까?")
+                                }
+                            )
+                    } else {
+                        Image(systemName: "photo")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 35, height: 35)
+                    }
 				}
 			)
 			.onChange(of: pm.currentPhotosItem) { _, newValue in
