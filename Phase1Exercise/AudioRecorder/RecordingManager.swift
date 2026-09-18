@@ -138,8 +138,7 @@ final class RecordingManager: NSObject {
 	}
 	
 	func hasPhotoImage(for voiceID: UUID? = nil) -> Bool? {
-		guard let id = voiceID,
-			  let filePathURL = getSelectedImageURL(for: voiceID) else {
+		guard let filePathURL = getSelectedImageURL(for: voiceID) else {
 			self.lastErrorMessage = "FileURL 에러"
 			return nil
 		}

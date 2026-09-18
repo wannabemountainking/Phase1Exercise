@@ -29,7 +29,6 @@ struct RecordRowView: View {
 
 #Preview {
 	RecordRowView(
-		voiceID: UUID(),
 		voice: Voice(),
 		manager: RecordingManager.shared
 	)
