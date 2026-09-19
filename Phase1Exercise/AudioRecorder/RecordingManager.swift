@@ -95,17 +95,27 @@ final class RecordingManager: NSObject {
 			do {
 				self.recorder = try AVAudioRecorder(url: url, settings: settings)
 				self.recorder?.delegate = self.recordEventHandler
-				
+                
+                print("입력 사용 가능한가: \(AVAudioSession.sharedInstance().isInputAvailable)")
+                
 				self.recorder?.record()
+//                let started = self.recorder?.record() ?? false
+//                print("녹음 시작 성공 여부: \(started)")
 				self.isRecording = true
 				
 			} catch {
 				self.lastErrorMessage = "AVAudioSession 생성 실패"
 			}
+            
+            print("recorder가 nil인가: \(self.recorder == nil)")
+            print("현재 lastErrorMessage: \(self.lastErrorMessage)")
 			
 			self.timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true, block: { [weak self] _ in
 				guard let self else { return }
+                print("타이머 틱, 현재 스레드가 메인인가: \(Thread.isMainThread)")
+                print("현재 currentTime 값: \(self.currentTime)")
 				self.currentTime = self.recorder?.currentTime ?? 0
+                print("현재 currentTime 값: \(self.currentTime)")
 				self.currentRecordingTime = self.currentTime.recordedTime
 			})
 		}
