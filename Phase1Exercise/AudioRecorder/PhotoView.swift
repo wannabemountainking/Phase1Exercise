@@ -12,7 +12,7 @@ struct PhotoView: View {
 	
 	@State private var pm: PhotoManager = .shared
 	@State private var rm: RecordingManager = .shared
-	@State private var shouldChangeImage: Bool = false
+	@State private var isShowingAlert: Bool = false
 	
 	let currentVoiceID: UUID
 	
@@ -28,27 +28,7 @@ struct PhotoView: View {
                             .resizable()
                             .scaledToFit()
                             .frame(width: 35, height: 35)
-                            .alert(
-                                "이미지 교체",
-                                isPresented: $shouldChangeImage,
-                                actions: {
-                                    Button("교체") {
-                                        // Action
-                                        Task {
-                                            await writeImageAction(item: pm.currentPhotosItem)
-                                        }
-                                        shouldChangeImage = true
-                                    }
-                                    Button("취소") {
-                                        // Action
-                                        shouldChangeImage = false
-                                    }
-                                },
-                                message: {
-                                    Text("이미지를 교체하시겠습니까?")
-                                }
-                            )
-                    } else {
+					} else if pm.selectedImage == nil {
                         Image(systemName: "photo")
                             .resizable()
                             .scaledToFit()
@@ -57,8 +37,51 @@ struct PhotoView: View {
 				}
 			)
 			.onChange(of: pm.currentPhotosItem) { _, newValue in
-				Task {
-					await writeImageAction(item: newValue)
+				if pm.selectedImage != nil {
+					isShowingAlert = true
+				} else {
+					Task {
+						await writeImageAction(item: newValue)
+					}
+				}
+			}
+			.alert(
+				"이미지 교체",
+				isPresented: $isShowingAlert,
+				actions: {
+					Button("교체") {
+						// Action
+						Task {
+							await writeImageAction(item: pm.currentPhotosItem)
+						}
+					}
+					Button("취소") {
+						// Action
+					}
+				},
+				message: {
+					Text("이미지를 교체하시겠습니까?")
+				}
+			)
+			.onAppear {
+				guard let currentVoicePathUrl = rm.getSelectedImageURL(for: currentVoiceID) else {
+					rm.lastErrorMessage = "file 의 URL을 찾지 못했습니다"
+					return
+				}
+				do {
+					let urlString = try String(contentsOf: currentVoicePathUrl, encoding: .utf8)
+					guard let imageData = FileManager.default.contents(atPath: urlString) else {
+						rm.lastErrorMessage = "이미지 데이터가 없습니다"
+						return
+					}
+					guard let image = pm.DataToImage(data: imageData) else {
+						rm.lastErrorMessage = "Data를 Image로 변환할 수 없습니다"
+						return
+					}
+					pm.selectedImage = image
+				} catch {
+					rm.lastErrorMessage = error.localizedDescription
+					return
 				}
 			}
 			
